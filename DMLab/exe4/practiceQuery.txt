@@ -1,0 +1,100 @@
+
+
+
+
+
+
+i) List the details of patients who are 20 years old and have been checked by eye-specialist. 
+db.patient.aggregate([
+	{$match:{age:{$gte:20}}},
+	{$lookup:{from:'doctor',foreignField:'ssn',localField:'doctor',as :'doc'}},
+	{$match:{'doc.expert':'eye'}},
+	{$project:{name:1,age:1,doctor:'$doc.name',expert:'$doc.expert'}}
+])
+
+
+
+
+ii.List the details of doctors who have given the prescription to more than 2 patients in year 2013.
+db.prescibe.aggregate([
+	{$match:{date:{$lte: new Date('2014-01-01'),$gte: new Date('2012-11-29'),}}},
+	{$group:{_id:'$doctor',pat:{$push:'$patient'},count:{$sum:1}}},
+	{$match:{count:{$gt:1}}}
+])
+
+
+
+
+iii) Retrieve the details of the doctor with the maximum experience.
+db.doctor.aggregate([
+	{$group:{_id:null,maxexp:{$max:'$yoe'}}},
+	{$lookup:{from:'doctor',foreignField:'yoe',localField:'maxexp',as:'join'}},
+	{$project:{join:1}}
+])
+
+
+[INCOMPLETE]
+iv) List the details of pharmaceutical companies who supply drug to more than 1 pharmacies in the same city where company is located.
+db.pharm.aggregate([
+	{$unwind:'$contract'},
+	{$lookup:{from:'contract',foreignField:'id',localField:'contract',as:'contract'}},
+	{$unwind:'$contract'},
+	{$project:{_id:0,name:1,city:1,'contract.pcomname':1}},
+	{$lookup:{from:'pcom',foreignField:'name',localField:'contract.pcomname',as:'comploc'}},
+	{$unwind:'$comploc'},
+	{$project:{_id:0,name:1,city:1,'contract.pcomname':1,'comploc.city':1}},
+	{$match:{$expr:{$eq:['$city','$comploc.city']}}},
+	{$group:{_id:'$contract.pcomname',count:{$sum:1}}}
+])
+
+
+
+v). List the details of healthcare assistants who serve in the operation theatre.
+db.assistant.find({
+  wards: "op-theatre"
+})
+
+
+
+
+vi) List the details of drugs supplied by all pharmaceutical companies.
+db.pharm.aggregate([ 
+	{ $unwind: "$drug" }, 
+	{ $group: { _id: "$drug.name", pharmacies: { $addToSet: "$name" }, count: { $sum: 1 } } }, 
+	{ $match: { count: { $gte: db.pharm.find().count() } } }, 
+	{ $project: { _id: 0, drug: "$_id", pharmacies: 1 } }
+] )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db.doctor.find().sort({ yoe: -1 }).limit(1)
+
+
+
+db.pcom.aggregate([ 
+	{ $unwind: "$drug" },
+	{ $lookup: { from: "drug", localField: "drug", foreignField: "name", as: "drugDetails" } }, 
+	{ $project: { _id: 0, pcomName: "$name", city: "$city", drug: "$drugDetails" } }
+] )
+
+
+
+db.pharm.aggregate([ { $unwind: "$drug" }, { $group: { _id: "$drug.name", pharmacies: { $addToSet: "$name" }, count: { $sum: 1 } } }, { $match: { count: { $gte: 2 } } }, { $project: { _id: 0, drug: "$_id", pharmacies: 1 } }] )
+

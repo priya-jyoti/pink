@@ -1,0 +1,9 @@
+Extra Lab related Resource:
+    https://www.studocu.com/in/document/visvesvaraya-technological-university/mcaassignsemester-i/dbmslabmanual/71231602
+    https://www.geeksforgeeks.org/er-diagram-of-bank-management-system/amp/
+    https://github.com/fsmk/MCA-VTU-Lab-Manual/blob/master/Sem2/Database_Lab/Syllabus.md
+    https://studyittoday.blogspot.com/2014/07/dbms-lab5-mysql.html
+    https://studyittoday.blogspot.com/2014/07/v-behaviorurldefaultvmlo.html
+    https://studyittoday.blogspot.com/2014/07/dbms-lab2-mysql.html
+    https://mitmysore.in/downloads/dbmslabmanual.pdf
+    http://studyittoday.blogspot.com/2014/07/dbms-lab5-mysql.html

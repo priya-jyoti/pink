@@ -1,0 +1,147 @@
+i) List the details of patients who are 20 years old and have been checked by eye-specialist. 
+
+db.patient.aggregate([
+  {$match: {age: 20}},
+  {$lookup: {
+      from: "doctor",
+      localField: "doctor",
+      foreignField: "ssn",
+      as: "doctorDetails"
+    }},
+  {$unwind: "$doctorDetails"},
+  {$match: {"doctorDetails.expert": "eye"}},
+  {$project: {
+      _id: 0,
+      ssn: 1,
+      name: 1,
+      city: 1,
+      age: 1,
+      doctor: "$doctorDetails.name"
+    }}
+])
+
+
+ii.List the details of doctors who have given the prescription to more than 2 patients in year 2013.
+db.prescibe.aggregate([
+  {$match: {date: {$gte: new Date("2013-01-01"),$lt: new Date("2014-01-01")}}},
+  {$group: {
+      _id: "$doctor",
+      patients: { $addToSet: "$patient" },
+      patientCount: { $sum: 1 }
+    }},
+  {$match: {patientCount: { $gt: 1 }}},
+  {$lookup: {
+      from: "doctor",
+      localField: "_id",
+      foreignField: "ssn",
+      as: "doctorDetails"
+    }},
+  {$project: {
+      _id: 0,
+      doctor: "$doctorDetails",
+      patientCount: 1
+    }}
+])
+
+db.doctor.updateOne(
+  { ssn: 'D101' },
+  { $set: { yoe: 23 } } )
+
+
+iii) Retrieve the details of the doctor with the maximum experience.
+db.doctor.aggregate([
+  {
+    $group: {
+      _id: null,
+      maxExperience: { $max: "$yoe" }
+    }
+  },
+  {
+    $unwind: "$maxExperience"
+  },
+  {
+    $lookup: {
+      from: "doctor",
+      localField: "maxExperience",
+      foreignField: "yoe",
+      as: "doctorsWithMaxExperience"
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      doctorsWithMaxExperience: 1
+    }
+  }
+])
+
+
+
+iv) List the details of pharmaceutical companies who supply drug to more than 1 pharmacies in the same city where company is located.
+db.pcom.aggregate([
+   {$unwind:"$drug"},
+   {
+      $group:{
+         _id:{name:"$name",city:"$city"},
+         count:{$sum:1}
+      }
+   },
+   {$match:{count:{$gte:2}}},
+   {
+      $project:{
+         _id:0,
+         name:"$_id.name",
+         city:"$_id.city"
+      }
+   }
+])
+
+v). List the details of healthcare assistants who serve in the operation theatre.
+db.assistant.find({
+  wards: "op-theatre"
+})
+
+
+
+
+vi) List the details of drugs supplied by all pharmaceutical companies.
+
+db.pharm.aggregate([ { $unwind: "$drug" }, { $group: { _id: "$drug.name", pharmacies: { $addToSet: "$name" }, count: { $sum: 1 } } }, { $match: { count: { $gte: db.pharm.find().count() } } }, { $project: { _id: 0, drug: "$_id", pharmacies: 1 } }] )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db.doctor.find().sort({ yoe: -1 }).limit(1)
+
+
+
+db.pcom.aggregate([ 
+	{ $unwind: "$drug" },
+	{ $lookup: { from: "drug", localField: "drug", foreignField: "name", as: "drugDetails" } }, 
+	{ $project: { _id: 0, pcomName: "$name", city: "$city", drug: "$drugDetails" } }
+] )
+
+
+
+db.pharm.aggregate([ { $unwind: "$drug" }, { $group: { _id: "$drug.name", pharmacies: { $addToSet: "$name" }, count: { $sum: 1 } } }, { $match: { count: { $gte: 2 } } }, { $project: { _id: 0, drug: "$_id", pharmacies: 1 } }] )
+
